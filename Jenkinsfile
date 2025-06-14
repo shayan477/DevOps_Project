@@ -2,7 +2,6 @@ pipeline {
   agent any
 
   environment {
-    # Loads your Azure SP values from Jenkins credentials:
     ARM_SUBSCRIPTION_ID = credentials('azure-sp-credentials_USR')
     ARM_CLIENT_ID       = credentials('azure-sp-credentials_USR')
     ARM_CLIENT_SECRET   = credentials('azure-sp-credentials_PSW')
@@ -29,7 +28,6 @@ pipeline {
           '''
         }
         script {
-          // Capture the public_ip output for later
           env.PUBLIC_IP = sh(
             script: "terraform -chdir=terraform output -raw public_ip",
             returnStdout: true
