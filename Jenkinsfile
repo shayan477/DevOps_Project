@@ -6,7 +6,7 @@ pipeline {
   }
   stages {
     stage('Checkout') {
-      steps { git url: 'https://github.com/your-repo/devops-project.git' }
+      steps { git url: 'https://github.com/shayan477/DevOps_Project.git' }
     }
     stage('Terraform') {
       steps {
