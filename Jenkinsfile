@@ -25,16 +25,14 @@ pipeline {
       }
     }
     stage('Ansible') {
-      steps {
-        sh """cat > inventory.ini << 'EOL'
+steps {
+sshagent(['jenkins-ssh-key']) {
+sh """cat > inventory.ini << 'EOL'
 [webserver]
-${env.PUBLIC_IP} ansible_user=azureuser ansible_ssh_private_key_file=\$SSH_KEY
+${env.PUBLIC_IP} ansible_user=azureuser ansible_ssh_private_key_file=$SSH_KEY
 EOL"""
-        sh 'ansible-playbook -i inventory.ini ansible/install_web.yml'
-      }
-    }
-    stage('Verify') {
-      steps { sh "curl http://${env.PUBLIC_IP}" }
-    }
-  }
+sh 'ansible-playbook -i inventory.ini ansible/install_web.yml'
+}
+}
+}
 }
