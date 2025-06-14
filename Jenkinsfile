@@ -4,10 +4,12 @@ pipeline {
     AZURE_SUB = credentials('azure-sp-credentials')
     SSH_KEY   = credentials('jenkins-ssh-key')
   }
-  stages {
-    stage('Checkout') {
-      steps { git url: 'git@github.com:shayan477/DevOps_Project.git' }
-    }
+  stages('Checkout') {
+  steps {
+    git credentialsId: 'github-ssh-key', branch: 'main', url: 'git@github.com:shayan477/DevOps_Project.git'
+  }
+}
+
     stage('Terraform') {
       steps {
         withEnv([
