@@ -1,0 +1,14 @@
+# Ignore Terraform local files
+terraform/.terraform/
+terraform/*.tfstate*
+terraform/*.tfvars
+
+# Ignore Ansible retry files
+*.retry
+
+# Ignore editor and OS files
+.vscode/
+.DS_Store
+
+# Never check in your secrets file
+terraform/variables.tf
