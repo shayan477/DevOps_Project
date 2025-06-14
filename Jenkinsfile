@@ -1,40 +1,48 @@
 pipeline {
   agent any
 
+  // Prevent Jenkins from doing the default pipeline checkout
+  options { skipDefaultCheckout() }
+
   stages {
     stage('Checkout') {
       steps {
-        sshagent(credentials: ['github-ssh-key']) {
-          git(
-            url:    'git@github.com:shayan477/DevOps_Project.git',
-            branch: 'main'
-          )
+        script {
+          sshagent(['github-ssh-key']) {
+            // SSH‐based clone of your repo
+            git(
+              url:    'git@github.com:shayan477/DevOps_Project.git',
+              branch: 'main'
+            )
+          }
         }
       }
     }
 
     stage('Terraform') {
       steps {
-        // Inject your Azure SP credentials
+        // Inject your Azure SP credentials into env vars
         withCredentials([usernamePassword(
           credentialsId: 'azure-sp-credentials',
           usernameVariable: 'ARM_CLIENT_ID',
           passwordVariable: 'ARM_CLIENT_SECRET'
         )]) {
-          // Export static subscription & tenant IDs as env vars
           withEnv([
             "ARM_SUBSCRIPTION_ID=4bc05121-31f4-4433-9642-0cc1637e78d5",
             "ARM_TENANT_ID=903341ab-c6ca-4510-89cd-ac942bb328c6"
           ]) {
-            // Run Terraform in its folder
             dir('terraform') {
               sh '''
-                terraform init
-                terraform apply -auto-approve
+                set -o pipefail
+                terraform init         \
+                  | tee init.log
+                terraform apply        \
+                  -auto-approve         \
+                  | tee apply.log
               '''
             }
-            // Capture the VM public IP for downstream stages
             script {
+              // Read the public_ip output for later stages
               env.PUBLIC_IP = sh(
                 script: "terraform -chdir=terraform output -raw public_ip",
                 returnStdout: true
@@ -47,21 +55,28 @@ pipeline {
 
     stage('Ansible Deploy') {
       steps {
-        // Use SSH agent with the VM key to connect
-        sshagent(credentials: ['jenkins-ssh-key']) {
-          sh '''
-            echo "[webserver]" > inventory.ini
-            echo "${PUBLIC_IP} ansible_user=azureuser" >> inventory.ini
-            ansible-playbook -i inventory.ini ansible/install_web.yml
-          '''
+        script {
+          sshagent(['jenkins-ssh-key']) {
+            sh '''
+              # Build a minimal inventory
+              printf "[webserver]\n%s ansible_user=azureuser\n" "${PUBLIC_IP}" > inventory.ini
+
+              # Run the playbook over the ssh-agent identity
+              ansible-playbook \
+                -i inventory.ini \
+                ansible/install_web.yml
+            '''
+          }
         }
       }
     }
 
     stage('Verify') {
       steps {
-        // Quick HTTP HEAD check to ensure Apache is up
-        sh "curl -I http://${PUBLIC_IP}"
+        sh '''
+          echo "=== HTTP HEAD for http://${PUBLIC_IP} ==="
+          curl -I "http://${PUBLIC_IP}"
+        '''
       }
     }
   }
