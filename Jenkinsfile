@@ -9,7 +9,6 @@ pipeline {
     git credentialsId: 'github-ssh-key', branch: 'main', url: 'git@github.com:shayan477/DevOps_Project.git'
   }
 }
-
     stage('Terraform') {
       steps {
         withEnv([
@@ -38,5 +37,5 @@ sh 'ansible-playbook -i inventory.ini ansible/install_web.yml'
 }
 }
 }
-}
+
 
