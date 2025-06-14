@@ -36,3 +36,5 @@ sh 'ansible-playbook -i inventory.ini ansible/install_web.yml'
 }
 }
 }
+}
+
