@@ -75,20 +75,6 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
-
-
-  os_disk {
-    caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
-  }
-
-    source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
-
 }
 
 output "public_ip" {
